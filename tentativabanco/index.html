@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Digital</title>
+    <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">BIBLIOTECADIGITAL</div>
+            <nav class="nav">
+                <a href="#" class="nav-link" onclick="openTab('dashboard')">Dashboard</a>
+                <a href="#" class="nav-link" onclick="openTab('livros')">Livros</a>
+                <a href="#" class="nav-link" onclick="openTab('membros')">Membros</a>
+                <a href="#" class="nav-link" onclick="openTab('emprestimos')">Empréstimos</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">SISTEMA BIBLIOTECA</h1>
+            <p class="hero-subtitle">Gerencie livros, membros e empréstimos de forma moderna e eficiente</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-button active" onclick="openTab('dashboard')">Dashboard</button>
+                <button class="tab-button" onclick="openTab('livros')">Livros</button>
+                <button class="tab-button" onclick="openTab('membros')">Membros</button>
+                <button class="tab-button" onclick="openTab('emprestimos')">Empréstimos</button>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="dashboard" class="tab-content active">
+                <h2>Dashboard da Biblioteca</h2>
+                <div class="stats-grid" id="stats-container">
+                    <div class="loading">Carregando estatísticas...</div>
+                </div>
+            </div>
+
+            <!-- Livros -->
+            <div id="livros" class="tab-content">
+                <h2>Acervo de Livros</h2>
+                <div id="livros-container">
+                    <div class="loading">Carregando livros...</div>
+                </div>
+            </div>
+
+            <!-- Membros -->
+            <div id="membros" class="tab-content">
+                <h2>Membros Cadastrados</h2>
+                <div id="membros-container">
+                    <div class="loading">Carregando membros...</div>
+                </div>
+            </div>
+
+            <!-- Empréstimos -->
+            <div id="emprestimos" class="tab-content">
+                <h2>Histórico de Empréstimos</h2>
+                <div id="emprestimos-container">
+                    <div class="loading">Carregando empréstimos...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="config.js"></script>
+    <script>
+        // Função para alternar entre abas
+        function openTab(tabName) {
+            // Esconde todas as abas
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove classe active de todos os botões
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Mostra a aba selecionada
+            document.getElementById(tabName).classList.add('active');
+            
+            // Adiciona classe active ao botão clicado
+            event.currentTarget.classList.add('active');
+            
+            // Carrega os dados da aba se necessário
+            if (tabName === 'livros') carregarLivros();
+            if (tabName === 'membros') carregarMembros();
+            if (tabName === 'emprestimos') carregarEmprestimos();
+            if (tabName === 'dashboard') carregarDashboard();
+        }
+
+        // Função para carregar livros
+        async function carregarLivros() {
+            const container = document.getElementById('livros-container');
+            
+            try {
+                const response = await fetch((window.API_BASE_URL || '') + 'livros.php');
+                const livros = await response.json();
+                
+                if (livros.error) {
+                    container.innerHTML = `<div class="error">Erro: ${livros.error}</div>`;
+                    return;
+                }
+                
+                let html = `
+                    <table class="data-table">
+                        <tr>
+                            <th>ID</th>
+                            <th>Título</th>
+                            <th>Autor</th>
+                            <th>Ano</th>
+                            <th>Status</th>
+                        </tr>
+                `;
+                
+                livros.forEach(livro => {
+                    const status = livro.disponivel ? 
+                        '<span class="status-available">Disponível</span>' : 
+                        '<span class="status-borrowed">Emprestado</span>';
+                    
+                    html += `
+                        <tr>
+                            <td>${livro.id_livro}</td>
+                            <td><strong>${livro.titulo}</strong></td>
+                            <td>${livro.autor}</td>
+                            <td>${livro.ano_publicacao || 'N/A'}</td>
+                            <td>${status}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</table>';
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="error">Erro ao carregar livros: ${error.message}</div>`;
+            }
+        }
+
+        // Função para carregar membros
+        async function carregarMembros() {
+            const container = document.getElementById('membros-container');
+            
+            try {
+                const response = await fetch((window.API_BASE_URL || '') + 'membros.php');
+                const membros = await response.json();
+                
+                if (membros.error) {
+                    container.innerHTML = `<div class="error">Erro: ${membros.error}</div>`;
+                    return;
+                }
+                
+                let html = `
+                    <table class="data-table">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                        </tr>
+                `;
+                
+                membros.forEach(membro => {
+                    html += `
+                        <tr>
+                            <td>${membro.id_membro}</td>
+                            <td><strong>${membro.nome}</strong></td>
+                            <td>${membro.email}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</table>';
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = `<div class="error">Erro ao carregar membros: ${error.message}</div>`;
+            }
+        }
+
+        // Função para carregar empréstimos
+async function carregarEmprestimos() {
+    const container = document.getElementById('emprestimos-container');
+    container.innerHTML = '<div class="loading">Carregando empréstimos...</div>';
+    
+    try {
+        const response = await fetch((window.API_BASE_URL || '') + 'emprestimos.php');
+        const emprestimos = await response.json();
+        
+        console.log('Dados retornados:', emprestimos); // Para debug
+        
+        if (emprestimos.error) {
+            container.innerHTML = `<div class="error">
+                <strong>Erro:</strong> ${emprestimos.error}
+                ${emprestimos.sql ? `<br><small>SQL: ${emprestimos.sql}</small>` : ''}
+            </div>`;
+            return;
+        }
+        
+        // Se não há empréstimos ou é uma mensagem
+        if (emprestimos.message || emprestimos.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 3rem; color: #ccc;">
+                    <h3>📭 Nenhum Empréstimo Encontrado</h3>
+                    <p>Não há empréstimos registrados no sistema.</p>
+                    <button onclick="criarEmprestimosExemplo()" style="
+                        background: #dc2626; 
+                        color: white; 
+                        border: none; 
+                        padding: 0.5rem 1rem; 
+                        border-radius: 5px; 
+                        cursor: pointer; 
+                        margin-top: 1rem;
+                    ">Criar Empréstimos de Exemplo</button>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = `
+            <table class="data-table">
+                <tr>
+                    <th>ID</th>
+                    <th>Livro</th>
+                    <th>Autor</th>
+                    <th>Membro</th>
+                    <th>Data Empréstimo</th>
+                    <th>Previsão Devolução</th>
+                    <th>Data Devolução</th>
+                    <th>Status</th>
+                </tr>
+        `;
+        
+        emprestimos.forEach(emp => {
+            const status = emp.status === 'Em aberto' ? 
+                `<span class="status-borrowed">⏳ ${emp.status}</span>` : 
+                `<span class="status-returned">✅ ${emp.status}</span>`;
+            
+            const dataDevolucao = emp.data_devolucao_real ? 
+                new Date(emp.data_devolucao_real).toLocaleDateString('pt-BR') : 
+                '<em style="color: #888;">-</em>';
+            
+            html += `
+                <tr>
+                    <td>${emp.id_emprestimo}</td>
+                    <td><strong>${emp.titulo}</strong></td>
+                    <td>${emp.autor}</td>
+                    <td>${emp.nome_membro}</td>
+                    <td>${new Date(emp.data_emprestimo).toLocaleDateString('pt-BR')}</td>
+                    <td>${new Date(emp.data_devolucao_prevista).toLocaleDateString('pt-BR')}</td>
+                    <td>${dataDevolucao}</td>
+                    <td>${status}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</table>';
+        container.innerHTML = html;
+        
+    } catch (error) {
+        container.innerHTML = `<div class="error">
+            <strong>Erro ao carregar empréstimos:</strong> ${error.message}
+            <br><br>
+            <strong>Soluções possíveis:</strong>
+            <ul>
+                <li>Verifique se a tabela Emprestimos existe</li>
+                <li>Confirme se há dados na tabela</li>
+                <li>Teste o arquivo emprestimos.php diretamente</li>
+            </ul>
+        </div>`;
+    }
+}
+
+// Função para criar empréstimos de exemplo (se necessário)
+async function criarEmprestimosExemplo() {
+    const container = document.getElementById('emprestimos-container');
+    container.innerHTML = '<div class="loading">Criando empréstimos de exemplo...</div>';
+    
+    try {
+        const response = await fetch('criar-emprestimos-exemplo.php');
+        const resultado = await response.json();
+        
+        if (resultado.success) {
+            container.innerHTML = `<div class="success" style="background: #16a34a; color: white; padding: 1rem; border-radius: 5px;">
+                ✅ ${resultado.message}
+            </div>`;
+            // Recarregar os empréstimos após criar
+            setTimeout(() => carregarEmprestimos(), 2000);
+        } else {
+            container.innerHTML = `<div class="error">Erro: ${resultado.error}</div>`;
+        }
+    } catch (error) {
+        container.innerHTML = `<div class="error">Erro ao criar empréstimos: ${error.message}</div>`;
+    }
+}
+
+// Função para carregar dashboard
+async function carregarDashboard() {
+    const container = document.getElementById('stats-container');
+    
+    try {
+        const base = window.API_BASE_URL || '';
+        const [livrosRes, membrosRes, emprestimosRes] = await Promise.all([
+            fetch(base + 'livros.php'),
+            fetch(base + 'membros.php'),
+            fetch(base + 'emprestimos.php')
+        ]);
+        
+        const [livros, membros, emprestimos] = await Promise.all([
+            livrosRes.json(),
+            membrosRes.json(),
+            emprestimosRes.json()
+        ]);
+        
+        console.log('Dados para dashboard:', { livros, membros, emprestimos }); // Para debug
+        
+        // Verificar se emprestimos é um array
+        let emprestimosArray = [];
+        let livrosDisponiveis = 0;
+        let emprestimosAbertos = 0;
+        
+        if (Array.isArray(livros)) {
+            livrosDisponiveis = livros.filter(l => l.disponivel).length;
+        } else {
+            console.warn('Livros não é um array:', livros);
+            livrosDisponiveis = 0;
+        }
+        
+        if (Array.isArray(emprestimos)) {
+            emprestimosArray = emprestimos;
+            emprestimosAbertos = emprestimos.filter(e => e.data_devolucao_real === null).length;
+        } else if (emprestimos && Array.isArray(emprestimos.data)) {
+            // Se for um objeto com propriedade data
+            emprestimosArray = emprestimos.data;
+            emprestimosAbertos = emprestimosArray.filter(e => e.data_devolucao_real === null).length;
+        } else {
+            console.warn('Emprestimos não é um array:', emprestimos);
+            emprestimosAbertos = 0;
+        }
+        
+        const totalLivros = Array.isArray(livros) ? livros.length : 0;
+        const totalMembros = Array.isArray(membros) ? membros.length : 0;
+        
+        const html = `
+            <div class="stat-card">
+                <div class="stat-number">${totalLivros}</div>
+                <div class="stat-label">Total de Livros</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${totalMembros}</div>
+                <div class="stat-label">Membros Cadastrados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${livrosDisponiveis}</div>
+                <div class="stat-label">Livros Disponíveis</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${emprestimosAbertos}</div>
+                <div class="stat-label">Empréstimos Ativos</div>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Erro no dashboard:', error);
+        container.innerHTML = `
+            <div class="error">
+                Erro ao carregar dashboard: ${error.message}
+                <br><br>
+                <button onclick="carregarDashboard()" style="
+                    background: #dc2626; 
+                    color: white; 
+                    border: none; 
+                    padding: 0.5rem 1rem; 
+                    border-radius: 5px; 
+                    cursor: pointer;
+                ">Tentar Novamente</button>
+            </div>
+        `;
+    }
+}
+
+        // Carrega o dashboard quando a página abre
+        document.addEventListener('DOMContentLoaded', carregarDashboard);
+    </script>
+</body>
+</html>

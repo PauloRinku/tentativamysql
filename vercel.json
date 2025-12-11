@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cd tentativabanco && bash build-config.sh",
+  "outputDirectory": "tentativabanco"
+}
